@@ -1,0 +1,15 @@
+<div id="message_<%= id %>"class="message <% if(status == "me"){ %>me<%} else {%>other<%}%>">
+	<% if(status == "other"){ %>
+		<div class="photo"></div>
+	<%}%>
+	<div class="body">
+		<div class="head">
+			<div class="arrow"></div>
+			<span class="name"><%= from %></span>
+			<span class="date"><%= date %></span>
+		</div>
+		<div class="text">
+			<div class="msg"><%= text %></div>
+		</div>
+	</div>
+</div>

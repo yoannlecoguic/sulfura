@@ -1,0 +1,7 @@
+<div id="group_<%= id %>" class="group <% if( status == "edit" ){ %> edit-group <% } %>">
+	<% if( status == "edit" ){ %>
+		<input type="text" placeholder="Nom du groupe" name="group_name" value="<%= name %>">
+	<% } else {%>
+		# <%= name %>
+	<% } %>
+</div>
