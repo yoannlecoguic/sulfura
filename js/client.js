@@ -1,105 +1,91 @@
-$(function(){
+//---------------------------------------------------------------------//
+//------------------------------Serveur--------------------------------//
+//---------------------------------------------------------------------//
+var CloudTransport = require('./js/CloudTransport.js')
+var cloudTransport = new CloudTransport({
+	"name": "yoann"
+})
 
-	//---------------------------------------------------------------------//
-	//-------------------------------Reseau--------------------------------//
-	//---------------------------------------------------------------------//
+cloudTransport.on("message", function(peer, message){
+	console.log("message", peer, message)
+	newMessage(message)
+})
 
-	
-	//Client side
-	function sendMessage(target, message){
-		// if( target.type == "group" ){
+cloudTransport.on("error", function(err){
+	console.log(err)
+})
 
-		// }
-		// else if( target.type == "friend" ){
-		// 	console.log("message")
-		// 	var friend = $.grep(db.friends, function(friend){ return friend.id == target.id; });
+cloudTransport.on("infos", function(peer, infos){
+	console.log("infos", peer, infos)
 
-		// 	if (friends.length != 0) {
-		// 		friend[0].ips.forEach(function(ip){
-		// 			send(ip, message)
-		// 		})
-		// 	} 
-		// }
+	db.friends[peer.id] = peer
+	renderFriend({
+		"id": peer.id,
+		"name": peer.name,
+		"photo": "",
+		"connected": true
+	})
+})
 
-		db.user.ips.forEach(function(ip){
-			send(ip, message)
-		})
-	}
+cloudTransport.on("filepart", function(peer, data){
+	console.log("filepart", peer, data)
+})
 
-	function send(ip, object){
-		var socket = new net.Socket();
-		console.log("Try to connect "+port+" "+ip);
+cloudTransport.on("execute", function(peer, command){
+	console.log("execute", peer, command)
+})
 
-		socket.connect(port, ip, function() {
+cloudTransport.on("connect", function(peer){
+	console.log("connect", peer)
+	console.log(Object.keys(cloudTransport.peers).length)
 
-			socket.write(JSON.stringify(object))
-		});
+	db.friends[peer.id] = peer
+	renderFriend({
+		"id": peer.id,
+		"name": peer.id,
+		"photo": "",
+		"connected": true
+	})
+})
 
-		socket.on('data', function(data) {
-			console.log(data)
-			// if(!data.err)
-			// 	socket.destroy();
-		});
+cloudTransport.on("disconnect", function(peer){
+	console.log("disconnect", peer)
+	console.log(Object.keys(cloudTransport.peers).length)
 
-		socket.on('error', function(err) {
-			console.log(err);
-		});
+	db.friends[peer.id].connected = false
+	renderFriend({
+		"id": peer.id,
+		"name": peer.name,
+		"photo": "",
+		"connected": false
+	})
+})
 
-		socket.on('close', function() {
-			console.log('Connection closed');
-		});
-	}
+/*cloudTransport.sendMessage(peer, message)*/
+/*cloudTransport.sendFile(peer, path)*/
 
-	// function mapNetwork(){
-	// 	console.log(db.user.ips)
 
-	// 	db.user.ips.forEach(function(ip){
-	// 		var base = ip.split(".");
-
-	// 		for(var i = 0; i <= 255; i++){
-	// 			console.log(base[0]+"."+base[1]+"."+base[2]+"."+i)
-	// 			send(base[0]+"."+base[1]+"."+base[2]+"."+i, {"type": "mapNetwork"})
-	// 		}
-	// 	})
-	// }
 
 
 	//---------------------------------------------------------------------//
 	//----------------------------Application------------------------------//
 	//---------------------------------------------------------------------//
 
-	const os = require("os")
-	const async = require("async")
-	const publicIp = require('public-ip')
-	const net = require("net")
 	const paths = ["user", "current", "groups", "friends", "messages"]
 
 	// Get local data
 	var db = {}
-	var port = 7878
-	var localhost = "127.0.0.1"
-	var sockets = []
-
-	//Server side
-	var server = net.createServer(function(socket) {
-		sockets.push(socket)
-
-		console.log("connexion serveur")
-
-		socket.on("data", function(data){
-			console.log(JSON.parse(data));
-		})
-	});
 
 	loadLocalData()
-	// mapNetwork()
+
+	db.user.name = "yoann"
 
 	function loadLocalData(){
 		var done = 0
 
 		paths.forEach(function(path){
 			var item = localStorage.getItem(path)
-			// var item = null
+			/*var item = null*/
 
 			if(item === null){
 				localStorage.setItem(path, "[]")
@@ -133,28 +119,6 @@ $(function(){
 			$("#"+db.current.type+"_"+db.current.id).addClass("focus")
 			reloadMessages()
 		}
-
-		// Get ips
-		var interfaces = os.networkInterfaces()
-		var addresses = []
-		for (var k in interfaces) {
-			 for (var k2 in interfaces[k]) {
-				var address = interfaces[k][k2]
-				if (address.family === 'IPv4' && !address.internal)
-					addresses.push(address.address)
-			 }
-		}
-
-		publicIp.v4().then(function(ip){
-			addresses.push(ip)
-		})
-		
-		db.user = {
-			"name": "Yoann",
-			"ips": addresses
-		}
-
-		server.listen(port, localhost);
 	}
 
 	function reloadMessages(){
@@ -168,15 +132,16 @@ $(function(){
 					renderMessage(message)
 
 				done++
-	
+
 				if(done == db.messages.length)
 					$(".loading").hide()
-			})		
+			})
 		}
 	}
 
 	// Messages
 	function saveMessage(){
+		console.log("sendMessage")
 		var message = {
 			"id": (new Date()).getTime(),
 			"from": db.user.name,
@@ -189,9 +154,10 @@ $(function(){
 		db.messages.push(message)
 		localStorage.setItem( "messages", JSON.stringify(db.messages) )
 
+		cloudTransport.sendMessage(db.friends[db.current.id], message)
+
 		$("textarea[name=message]").val("")
 		renderMessage(message)
-		sendMessage(db.current, message)
 	}
 
 	function renderMessage(message){
@@ -200,6 +166,8 @@ $(function(){
 
 	function newMessage(message){
 		db.messages.push(message)
+		localStorage.setItem( "messages", JSON.stringify(db.messages) )
+
 		if(db.current.type == message.type && db.current.id == message.conversation)
 			reloadMessages()
 		else{
@@ -271,6 +239,23 @@ $(function(){
 
 	//Friends
 	function renderFriend(friend){
+		$("#friend_" + friend.id).remove()
 		$("#friends").append( new EJS({url: 'views/friend.ejs'}).render(friend) )
 	}
-})
+
+	$(document).on("click", ".friend", function(){
+		console.log("onclick")
+
+		if( !$(this).hasClass("edit-group") ){
+			db.current = {
+				"type": "friend",
+				"id": $(this).attr("id").split("_")[1]
+			}
+			localStorage.setItem( "current", JSON.stringify(db.current) )
+
+			$(".focus").removeClass("focus")
+			$(this).addClass("focus")
+
+			reloadMessages()
+		}
+	})

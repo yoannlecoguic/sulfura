@@ -1,0 +1,26 @@
+{
+  "name": "sulfura",
+  "version": "1.0.0",
+  "description": "suce",
+  "main": "main.js",
+  "dependencies": {
+    "jsonstream": "^1.0.3",
+    "public-ip": "^2.0.1",
+    "os-name": "^2.0.1",
+    "uniqid": "^3.0.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "electron main.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yoannlecoguic/sulfura.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/yoannlecoguic/sulfura/issues"
+  },
+  "homepage": "https://github.com/yoannlecoguic/sulfura#readme"
+}
