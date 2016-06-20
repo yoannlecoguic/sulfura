@@ -131,6 +131,8 @@ cloudTransport.on("disconnect", function(peer){
 				if(message.type == db.current.type && message.conversation == db.current.id)
 					renderMessage(message)
 
+				console.log(message)
+
 				done++
 
 				if(done == db.messages.length)
