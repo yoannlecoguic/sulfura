@@ -29,6 +29,7 @@ function CloudTransport(opt) {
     this.peers = {};
     this.remotes = opt.remotes || [];
     this.transferts = {};
+    this.slug = opt.slug || (this.name +"_"+(new Date()).getTime());
 
     this.createServer();
 }

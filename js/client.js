@@ -1,10 +1,36 @@
 //---------------------------------------------------------------------//
 //------------------------------Serveur--------------------------------//
 //---------------------------------------------------------------------//
+
+var os = require('os');
+const paths = ["user", "current", "groups", "friends", "messages"]
+var db = {}
+
+loadLocalData()
+
+console.log(db.user)
+
 var CloudTransport = require('./js/CloudTransport.js')
-var cloudTransport = new CloudTransport({
-	"name": "yoann"
+var cloudTransport = new CloudTransport(db.user)
+
+cloudTransport.on("ready", function(){
+	console.log("ready")
+
+	db.user = {
+		"version" : cloudTransport.version,
+		"name" : cloudTransport.name,
+		"localAddress" : cloudTransport.localAddress,
+		"netmask" : cloudTransport.netmask,
+		"broadcastAddress" : cloudTransport.broadcastAddress,
+		"localPort" : cloudTransport.localPort,
+		"slug" : cloudTransport.slug,
+	}
+
+	localStorage.setItem( "user", JSON.stringify(db.user) )
+
+	console.log("user", db.user)
 })
+
 
 cloudTransport.on("message", function(peer, message){
 	console.log("message", peer, message)
@@ -15,13 +41,18 @@ cloudTransport.on("error", function(err){
 	console.log(err)
 })
 
+
 cloudTransport.on("infos", function(peer, infos){
 	console.log("infos", peer, infos)
 
-	db.friends[peer.id] = peer
+	db.friends[peer.slug] = peer
+
+	if(!db.messages[peer.id])
+		db.messages[peer.id] = []
+
 	renderFriend({
-		"id": peer.id,
-		"name": peer.name,
+		"id": peer.slug,
+		"name": infos.name,
 		"photo": "",
 		"connected": true
 	})
@@ -39,18 +70,11 @@ cloudTransport.on("connect", function(peer){
 	console.log("connect", peer)
 	console.log(Object.keys(cloudTransport.peers).length)
 
-	db.friends[peer.id] = peer
-
-	renderFriend({
-		"id": peer.id,
-		"name": peer.id,
-		"photo": "",
-		"connected": true
-	})
+	db.friends[peer.slug] = peer
 
 	cloudTransport.sendMessage(peer, {
 		"id": (new Date()).getTime(),
-		"from": db.user.name,
+		"from": db.user.slug,
 		"conversation": db.current.id,
 		"type": db.current.type,
 		"text": 'HULLO',
@@ -63,17 +87,38 @@ cloudTransport.on("disconnect", function(peer){
 	console.log("disconnect", peer)
 	console.log(Object.keys(cloudTransport.peers).length)
 
-	db.friends[peer.id].connected = false
+	db.friends[peer.slug].connected = false
 	renderFriend({
-		"id": peer.id,
-		"name": peer.name,
+		"id": peer.slug,
+		"name": infos.name,
 		"photo": "",
-		"connected": false
+		"connected": true
 	})
 })
 
 /*cloudTransport.sendMessage(peer, message)*/
 /*cloudTransport.sendFile(peer, path)*/
+
+console.log("SETUP");
+var handler = document.getElementById("new_message");
+
+handler.ondragover = function () {
+	console.log("DRAGGING");
+	return false;
+};
+
+handler.ondragleave = handler.ondragend = function () {
+	console.log("NOT DRAGGING");
+	return false;
+};
+
+handler.ondrop = function (e) {
+	console.log("DROPPING");
+	e.preventDefault();
+	var file = e.dataTransfer.files[0];
+	console.log('File you dragged here is', file.path);
+	return false;
+};
 
 
 
@@ -81,15 +126,6 @@ cloudTransport.on("disconnect", function(peer){
 	//---------------------------------------------------------------------//
 	//----------------------------Application------------------------------//
 	//---------------------------------------------------------------------//
-
-	const paths = ["user", "current", "groups", "friends", "messages"]
-
-	// Get local data
-	var db = {}
-
-	loadLocalData()
-
-	db.user.name = "yoann"
 
 	function loadLocalData(){
 		var done = 0
@@ -114,16 +150,27 @@ cloudTransport.on("disconnect", function(peer){
 
 	function loadingEnd(){
 		// Render local data
-		db.groups.forEach(renderGroup)
-		db.friends.forEach(renderFriend)
+		for(var i in db.groups)
+			renderGroup(db.groups[i])
+
+		for(var i in db.friends)
+			renderFriend(db.friends[i])
 
 		// Take first group if not focus
-		if(db.groups.length != 0 && db.current == "")
-			db.current = db.groups[0]
+		if(db.groups.length != 0 && db.current == ""){
+			db.current = {
+				"type": "group",
+				"id": db.groups[0].id
+			}
+		}
 
 		// Take first friend if not focus and no group
-		if(db.friends.length != 0 && db.current == "")
-			db.current = db.friends[0]
+		if(db.friends.length != 0 && db.current == ""){
+			db.current = {
+				"type": "group",
+				"id": db.friends[0].slug
+			}
+		}
 
 		// Reload messages with the current
 		if(db.current != ""){
@@ -136,17 +183,18 @@ cloudTransport.on("disconnect", function(peer){
 		$("#show_messages").html("<img class='loading' src='./views/loader.gif'>")
 		var done = 0
 
-		console.log(db.current)
-		if(db.current != ""){
-			db.messages[db.current.id].forEach(function(message){
-				renderMessage(message)
-				console.log(message)
+		if(db.current){
+			console.log(db.messages[db.current.id])
+
+			for(var i in db.messages[db.current.id]){
+				renderMessage(db.messages[db.current.id][i])
+				console.log(db.messages[db.current.id][i])
 
 				done++
 
 				if(done == db.messages[db.current.id].length)
 					$(".loading").hide()
-			})
+			}
 		}
 	}
 
@@ -176,7 +224,14 @@ cloudTransport.on("disconnect", function(peer){
 	}
 
 	function newMessage(message){
+		if(!db.messages[message.conversation])
+			db.messages[message.conversation] = [];
+
+		console.log("save message", message)
+
 		db.messages[message.conversation].push(message)
+		console.log("messages", db.messages[message.conversation])
+
 		localStorage.setItem( "messages", JSON.stringify(db.messages) )
 
 		if(db.current.id == message.conversation)
