@@ -11,6 +11,7 @@ localData.init(function(){
 
 	var CloudTransport = require('./js/CloudTransport.js')
 	var cloudTransport = new CloudTransport( localData.get("user") )
+	var peers = {}
 
 	cloudTransport.on("ready", function(user){
 		console.log("ready cloud")
@@ -21,19 +22,21 @@ localData.init(function(){
 
 	cloudTransport.on("connect", function(peer){
 		console.log("connect", peer)
-		peer.connected = true
-		peer.photo = ""
+	})
 
-		localData.add("friends", peer)
+	cloudTransport.on("infos", function(peer){
+		console.log("infos", peer)
+		peers[peer.slug] = peer
+		peers[peer.slug].connected = true;
+
+		// localData.set("friends", peer)
 		localData.renderAll()
 	})
 
 	cloudTransport.on("disconnect", function(peer){
 		console.log("disconnect", peer)
-		peer.connected = false
-		peer.photo = ""
+		peers[peer.slug].connected = false;
 
-		localData.add("friends", peer)
 		localData.renderAll()
 	})
 })

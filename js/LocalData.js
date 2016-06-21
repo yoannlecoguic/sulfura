@@ -46,6 +46,13 @@ LocalData.prototype.add = function(type, item){
 	localStorage.setItem( type , JSON.stringify(self.db[ type ]) )
 }
 
+LocalData.prototype.set = function(type, item){
+	var self = this
+
+	self.db[type][item.slug] = item
+	localStorage.setItem( type , JSON.stringify(self.db[ type ]) )
+}
+
 LocalData.prototype.get = function(type){
 	var self = this
 
@@ -69,8 +76,10 @@ LocalData.prototype.renderAll = function(){
 	for(var i in this.db.groups)
 		this.renderGroup( this.db.groups[i] )
 
-	for(var i in this.db.friends)
+	for(var i in this.db.friends){
+		console.log("FRIENDS", this.db.friends[i])
 		this.renderFriend( this.db.friends[i] )
+	}
 }
 
 

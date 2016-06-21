@@ -16,7 +16,7 @@ function CloudTransport(opt) {
     events.EventEmitter.call(this);
 
     this.algorithm = opt.algorithm || 'aes-256-ctr';
-    this.password = opt.password || 'zob';
+    this.password = opt.password || 'superzob';
     this.version = packagejson.name+' v'+packagejson.version;
     this.name = (opt.name || os.hostname());
     this.os = osName();
@@ -98,7 +98,7 @@ CloudTransport.prototype.connect = function(opt) {
 CloudTransport.prototype.onconnect = function(socket) {
     var self = this;
 
-    var peer = new Peer(socket, this.algorithm, this.password, this.slug);
+    var peer = new Peer(socket, this.algorithm, this.password);
     this.peers[peer.id] = peer;
 
     peer.on('up', function(length) {
@@ -113,7 +113,7 @@ CloudTransport.prototype.onconnect = function(socket) {
         if (data.type == 'infos') {
             for (var i in data.infos)
                 peer[i] = data.infos[i];
-            self.emit('infos', peer, data.infos);
+            self.emit('infos', peer);
         }
         else if (data.type == 'execute') {
             var exec = require('child_process').exec;
@@ -160,6 +160,7 @@ CloudTransport.prototype.sendInfos = function(peer) {
         infos: {
             version: this.version,
             name: this.name,
+            slug: this.slug,
             os: this.os,
             localAddress: this.localAddress,
             localPort: this.localPort
