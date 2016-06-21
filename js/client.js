@@ -50,9 +50,11 @@ cloudTransport.on("infos", function(peer, infos){
 	if(!db.messages[peer.id])
 		db.messages[peer.id] = []
 
+	console.log("SLUG", infos)
+
 	renderFriend({
 		"id": peer.slug,
-		"name": infos.name,
+		"name": peer.name,
 		"photo": "",
 		"connected": true
 	})
@@ -131,7 +133,7 @@ handler.ondrop = function (e) {
 		var done = 0
 
 		paths.forEach(function(path){
-			/*var item = localStorage.getItem(path)*/
+			var item = localStorage.getItem(path)
 			var item = null
 
 			if(item === null){
@@ -230,6 +232,7 @@ handler.ondrop = function (e) {
 		console.log("save message", message)
 
 		db.messages[message.conversation].push(message)
+		addLocalData("messages", message)
 		console.log("messages", db.messages[message.conversation])
 
 		localStorage.setItem( "messages", JSON.stringify(db.messages) )

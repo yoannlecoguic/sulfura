@@ -57,10 +57,10 @@ CloudTransport.prototype.createServer = function() {
         process.exit();
     });
     self.server.listen(self.localPort, self.localAddress, function() {
-        self.emit('ready');
-        self.discovery();
-        for (var i in self.remotes)
-            self.connect(self.remotes[i]);
+        self.emit('ready', {
+            "id": self.slug,
+            "name": self.name
+        });
     });
 };
 
