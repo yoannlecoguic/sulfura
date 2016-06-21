@@ -6,6 +6,7 @@ let win
 
 function createWindow(){
 	win = new BrowserWindow({width: 1200, height: 1000})
+	win.maximize()
 	win.loadURL("file://"+__dirname+"/index.html")
 	win.webContents.openDevTools()
 

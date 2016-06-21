@@ -40,11 +40,22 @@ cloudTransport.on("connect", function(peer){
 	console.log(Object.keys(cloudTransport.peers).length)
 
 	db.friends[peer.id] = peer
+
 	renderFriend({
 		"id": peer.id,
 		"name": peer.id,
 		"photo": "",
 		"connected": true
+	})
+
+	cloudTransport.sendMessage(peer, {
+		"id": (new Date()).getTime(),
+		"from": db.user.name,
+		"conversation": db.current.id,
+		"type": db.current.type,
+		"text": 'HULLO',
+		"status": "you",
+		"date": new Date()
 	})
 })
 
@@ -84,8 +95,8 @@ cloudTransport.on("disconnect", function(peer){
 		var done = 0
 
 		paths.forEach(function(path){
-			var item = localStorage.getItem(path)
-			/*var item = null*/
+			/*var item = localStorage.getItem(path)*/
+			var item = null
 
 			if(item === null){
 				localStorage.setItem(path, "[]")
@@ -127,15 +138,13 @@ cloudTransport.on("disconnect", function(peer){
 
 		console.log(db.current)
 		if(db.current != ""){
-			db.messages.forEach(function(message){
-				if(message.type == db.current.type && message.conversation == db.current.id)
-					renderMessage(message)
-
+			db.messages[db.current.id].forEach(function(message){
+				renderMessage(message)
 				console.log(message)
 
 				done++
 
-				if(done == db.messages.length)
+				if(done == db.messages[db.current.id].length)
 					$(".loading").hide()
 			})
 		}
@@ -153,7 +162,7 @@ cloudTransport.on("disconnect", function(peer){
 			"status": "me",
 			"date": new Date()
 		}
-		db.messages.push(message)
+		db.messages[db.current.id].push(message)
 		localStorage.setItem( "messages", JSON.stringify(db.messages) )
 
 		cloudTransport.sendMessage(db.friends[db.current.id], message)
@@ -167,13 +176,13 @@ cloudTransport.on("disconnect", function(peer){
 	}
 
 	function newMessage(message){
-		db.messages.push(message)
+		db.messages[message.conversation].push(message)
 		localStorage.setItem( "messages", JSON.stringify(db.messages) )
 
-		if(db.current.type == message.type && db.current.id == message.conversation)
+		if(db.current.id == message.conversation)
 			reloadMessages()
 		else{
-			//Show notif
+			console.log("notif : ", message.conversation)
 		}
 	}
 
