@@ -98,7 +98,7 @@ CloudTransport.prototype.connect = function(opt) {
 CloudTransport.prototype.onconnect = function(socket) {
     var self = this;
 
-    var peer = new Peer(socket, this.algorithm, this.password);
+    var peer = new Peer(socket, this.algorithm, this.password, this.slug);
     this.peers[peer.id] = peer;
 
     peer.on('up', function(length) {

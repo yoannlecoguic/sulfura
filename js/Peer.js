@@ -5,7 +5,7 @@ var zlib = require('zlib');
 var uniqid = require('uniqid');
 var JSONStream = require('JSONStream');
 
-function Peer(socket, algorithm, password) {
+function Peer(socket, algorithm, password, slug) {
     var self = this;
     events.EventEmitter.call(this);
 
@@ -23,6 +23,7 @@ function Peer(socket, algorithm, password) {
     this.up = 0;
     this.down = 0;
     this.peers = [];
+    this.slug;
 
     // peer's streams
     var zip = zlib.createGzip();

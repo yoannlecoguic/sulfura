@@ -6,7 +6,7 @@ var localData = new LocalData(paths)
 // Render local data
 localData.init(function(){
 	console.log("ready localdata")
-	// localData.clear()
+	localData.clear()
 	localData.renderAll()
 
 	var CloudTransport = require('./js/CloudTransport.js')
@@ -21,12 +21,16 @@ localData.init(function(){
 
 	cloudTransport.on("connect", function(peer){
 		console.log("connect", peer)
-		console.log(Object.keys(cloudTransport.peers).length)
+		peer.connected = true
+		localData.add("friends", peer)
+		localData.renderAll()
 	})
 
 	cloudTransport.on("disconnect", function(peer){
 		console.log("disconnect", peer)
-		console.log(Object.keys(cloudTransport.peers).length)
+		peer.connected = false
+		localData.add("friends", peer)
+		localData.renderAll()
 	})
 })
 

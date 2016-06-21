@@ -39,10 +39,10 @@ LocalData.prototype.clear = function(){
 LocalData.prototype.add = function(type, item){
 	var self = this
 
-	if(!self.db[type][item.id])
-		self.db[type][item.id] = []
+	if(!self.db[type][item.slug])
+		self.db[type][item.slug] = []
 
-	self.db[type][item.id].push( item )
+	self.db[type][item.slug].push( item )
 	localStorage.setItem( type , JSON.stringify(self.db[ type ]) )
 }
 
@@ -52,13 +52,13 @@ LocalData.prototype.get = function(type){
 	return self.db[type]
 }
 
-LocalData.prototype.getById = function(type, id){
+LocalData.prototype.getBySlug = function(type, slug){
 	var self = this
 
-	if(!self.db[type][item.id])
+	if(!self.db[type][item.slug])
 		return {}
 
-	return self.db[type][item.id]
+	return self.db[type][item.slug]
 }
 
 
@@ -77,25 +77,20 @@ LocalData.prototype.renderAll = function(){
 
 //GROUPS
 LocalData.prototype.renderGroup = function(group){
-	$("#groups").append( new EJS({url: './views/group.ejs'}).render(group) )
+	if($("#group_"+group.id))
+		$("#group_"+group.id).replaceWith( new EJS({url: './views/group.ejs'}).render(group) )
+	else
+		$("#groups").append( new EJS({url: 'views/group.ejs'}).render(group) )
 }
-
-LocalData.prototype.updateGroup = function(group){
-	$("#group_"+group.id).replaceWith( new EJS({url: './views/group.ejs'}).render(group) )
-}
-
-
 
 
 //FRIENDS
 LocalData.prototype.renderFriend = function(friend){
-	$("#friends").append( new EJS({url: 'views/friend.ejs'}).render(friend) )
+	if($("#friend_"+friend.id))
+		$("#friend_"+friend.id).replaceWith( new EJS({url: './views/friend.ejs'}).render(friend) )
+	else
+		$("#friends").append( new EJS({url: 'views/friend.ejs'}).render(friend) )
 }
-
-LocalData.prototype.updateFriend = function(friend){
-	$("#group_"+friend.id).replaceWith( new EJS({url: './views/friend.ejs'}).render(friend) )
-}
-
 
 
 // MESSAGES
