@@ -22,6 +22,8 @@ localData.init(function(){
 	cloudTransport.on("connect", function(peer){
 		console.log("connect", peer)
 		peer.connected = true
+		peer.photo = ""
+
 		localData.add("friends", peer)
 		localData.renderAll()
 	})
@@ -29,6 +31,8 @@ localData.init(function(){
 	cloudTransport.on("disconnect", function(peer){
 		console.log("disconnect", peer)
 		peer.connected = false
+		peer.photo = ""
+
 		localData.add("friends", peer)
 		localData.renderAll()
 	})
