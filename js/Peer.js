@@ -23,7 +23,7 @@ function Peer(socket, algorithm, password, slug) {
     this.up = 0;
     this.down = 0;
     this.peers = [];
-    this.slug;
+    this.slug = slug;
 
     // peer's streams
     var zip = zlib.createGzip();
